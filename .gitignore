@@ -1,0 +1,41 @@
+# API Key & secret
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual env
+/venv/
+/.venv/
+/env/
+/bin/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+
+# Ansible
+tool_executor/ansible/artifacts/*
+tool_executor/ansible/env/extravars
+tool_executor/ansible/inventory/hosts
+tool_executor/ansible/inventory.ini
+
+# Testing & Logs
+.pytest_cache/
+.coverage
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

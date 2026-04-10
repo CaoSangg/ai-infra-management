@@ -1,0 +1,10 @@
+langgraph
+langchain
+langchain-core
+google-genai
+ansible-runner
+jinja2
+pydantic
+python-dotenv
+langchain-google-genai
+google-generativeai

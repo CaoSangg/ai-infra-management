@@ -1,0 +1,15 @@
+# Khai báo provider
+provider "aws" {
+  region = "{{ region | default('ap-southeast-1') }}"
+}
+
+# Khai báo template EC2
+resource "aws_instance" "app_server" {
+  ami = "{{ ami_id }}"
+  instance_type = "{{ instance_type }}"
+
+  tags = {
+    Name = "{{ instance_name | default('AI-Generated-EC2') }}"
+    Environment = "{{ environment | default('dev') }}"
+  }
+}

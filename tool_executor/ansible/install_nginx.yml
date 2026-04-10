@@ -1,0 +1,22 @@
+# layer4_tool_executor/ansible/install_nginx.yml
+---
+- name: Cài đặt và cấu hình Nginx trên Target Environment
+  hosts: targets      # Trỏ đúng vào nhóm [targets] đã khai báo trong inventory.ini
+  become: yes         # Chạy với quyền sudo
+  
+  tasks:
+    - name: Cập nhật apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Cài đặt package Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Đảm bảo dịch vụ Nginx đang chạy và tự khởi động cùng hệ thống
+      service:
+        name: nginx
+        state: started
+        enabled: yes
