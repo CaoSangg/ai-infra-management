@@ -10,7 +10,8 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 
 # Agent Chính: Gemini 3.1 Pro
 main_agent = ChatGoogleGenerativeAI(
-    model="gemini-3.1-pro-preview",
+#   model="gemini-3.1-pro-preview",
+    model="gemini-3-flash-preview",
     google_api_key=google_api_key,
     temperature=0.1,
 )

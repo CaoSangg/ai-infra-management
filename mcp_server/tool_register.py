@@ -6,7 +6,7 @@ def get_available_tools() -> list[types.Tool]:
     return [
 	# Ansible
         types.Tool(
-            name="run_ansible_playbook",
+            name="execute_ansible_playbook",
             description="Dùng để thực thi cấu hình hệ thống trên Linux bằng Ansible.",
             inputSchema={
                 "type": "object",
@@ -22,36 +22,40 @@ def get_available_tools() -> list[types.Tool]:
                 },
                 "required": ["playbook_name"]
             }
-        )
+        ),
 
 	# Terraform
-	types.Tool(
+        types.Tool(
             name="provision_aws_infrastructure",
-            description="Dùng để tạo, cập nhật hoặc quản lý tài nguyên hạ tầng AWS (ví dụ: EC2). Hệ thống sẽ tự động dùng Terraform để thực thi. Cần truyền vào resource_type và config.",
+            description="Dùng để tạo, cập nhật hoặc quản lý tài nguyên AWS. QUAN TRỌNG: Phải tạo 'network' trước, sau đó lấy Output ID truyền vào 'ec2'.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "resource_type": {
                         "type": "string",
-                        "description": "Loại tài nguyên muốn tạo (hiện tại hỗ trợ: 'ec2')",
-                        "enum": ["ec2"]
+                        "description": "Loại tài nguyên muốn tạo.",
+                        "enum": ["network", "iam", "ec2", "s3"] 
                     },
                     "config": {
                         "type": "object",
-                        "description": "Cấu hình chi tiết cho tài nguyên",
+                        "description": "Cấu hình chi tiết cho tài nguyên. \n- Với 'network': có thể truyền vpc_cidr, public_subnet_cidr, private_subnet_cidr.\n- Với 'ec2': BẮT BUỘC có ami_id, instance_type. Nếu muốn gắn vào mạng riêng, truyền thêm target_subnet_id và security_group_id.",
                         "properties": {
                             "region": {"type": "string", "default": "ap-southeast-1"},
-                            "ami_id": {"type": "string", "description": "Amazon Machine Image ID"},
-                            "instance_type": {"type": "string", "description": "Loại máy ảo, ví dụ t2.micro, t3.medium"},
-                            "instance_name": {"type": "string", "description": "Tên định danh cho máy ảo"},
-                            "environment": {"type": "string", "enum": ["dev", "staging", "production"]}
-                        },
-                        "required": ["ami_id", "instance_type"]
+                            "ami_id": {"type": "string", "description": "ID của hệ điều hành (Chỉ dùng cho ec2)"},
+                            "instance_type": {"type": "string", "description": "Loại máy ảo (Chỉ dùng cho ec2)"},
+                            "instance_name": {"type": "string", "description": "Tên tài nguyên"},
+                            "environment": {"type": "string", "enum": ["dev", "staging", "production"]},
+                            "vpc_cidr": {"type": "string", "description": "Dải IP cho VPC (Chỉ dùng cho network)"},
+                            "public_subnet_cidr": {"type": "string", "description": "Dải IP cho Public Subnet (Chỉ dùng cho network)"},
+                            "private_subnet_cidr": {"type": "string", "description": "Dải IP cho Private Subnet (Chỉ dùng cho network)"},
+                            "target_subnet_id": {"type": "string", "description": "ID của Subnet (Public hoặc Private) để gắn tài nguyên vào"},
+                            "security_group_id": {"type": "string", "description": "ID của Security Group để gắn tài nguyên vào"}
+                        }
                     }
                 },
                 "required": ["resource_type", "config"]
             }
-        )
+        ),
 
         # Monitor
         types.Tool(

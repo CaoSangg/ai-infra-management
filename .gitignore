@@ -39,3 +39,8 @@ tool_executor/ansible/inventory.ini
 # OS
 .DS_Store
 Thumbs.db
+
+# SSH Keys & Secrets
+*.pem
+*.ppk
+*.key

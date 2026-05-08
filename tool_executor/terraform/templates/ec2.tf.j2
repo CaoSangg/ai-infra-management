@@ -1,15 +1,73 @@
-# Khai báo provider
-provider "aws" {
-  region = "{{ region | default('ap-southeast-1') }}"
+# Tự động sinh khóa SSH RSA
+resource "tls_private_key" "ssh_key_{{ instance_name | default('default_server') | replace('-', '_') }}" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
-# Khai báo template EC2
-resource "aws_instance" "app_server" {
-  ami = "{{ ami_id }}"
-  instance_type = "{{ instance_type }}"
+# Đăng ký Public Key lên AWS
+resource "aws_key_pair" "keypair_{{ instance_name | default('default_server') | replace('-', '_') }}" {
+  key_name   = "key-{{ instance_name | default('default_server') }}"
+  public_key = tls_private_key.ssh_key_{{ instance_name | default('default_server') | replace('-', '_') }}.public_key_openssh
+}
 
+# Lưu Private Key xuống máy local thành file .pem để Ansible sử dụng
+resource "local_file" "private_key_{{ instance_name | default('default_server') | replace('-', '_') }}" {
+  content         = tls_private_key.ssh_key_{{ instance_name | default('default_server') | replace('-', '_') }}.private_key_pem
+  filename        = "${path.module}/{{ instance_name | default('default_server') }}.pem"
+  file_permission = "0400" # Ansible yêu cầu quyền 0400 cho file key
+}
+
+# Khai báo EC2
+resource "aws_instance" "ec2_{{ instance_name | default('default_server') | replace('-', '_') }}" {
+  ami           = "{{ ami_id }}"
+  instance_type = "{{ instance_type }}"
+  
+  # Gắn Key Pair vừa tạo vào máy ảo
+  key_name      = aws_key_pair.keypair_{{ instance_name | default('default_server') | replace('-', '_') }}.key_name
+
+  # If/else xử lý Subnet
+  {% if target_subnet_id %}
+  subnet_id = "{{ target_subnet_id }}"
+  {% elif is_private %}
+  subnet_id = aws_subnet.private_subnet.id
+  {% else %}
+  subnet_id = aws_subnet.public_subnet.id 
+  {% endif %}
+
+  # If/else xử lý Security Group
+  {% if security_group_id %}
+  vpc_security_group_ids = ["{{ security_group_id }}"]
+  {% elif is_private %}
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  {% else %}
+  vpc_security_group_ids = [aws_security_group.public_sg.id] 
+  {% endif %}
+  
+  # Quyền lấy IP public
+  {% if is_private %}
+  associate_public_ip_address = false
+  {% else %}
+  associate_public_ip_address = true
+  {% endif %}
+  
   tags = {
-    Name = "{{ instance_name | default('AI-Generated-EC2') }}"
+    Name        = "{{ instance_name | default('AI-Generated-EC2') }}"
     Environment = "{{ environment | default('dev') }}"
+    ManagedBy   = "AI-Agent"
+    # Tag thêm để dễ nhận biết trên giao diện AWS
+    NetworkType = "{% if is_private %}Private{% else %}Public/Bastion{% endif %}"
   }
+}
+
+# Outputs cho Ansible vs State Fetcher
+{% if not is_private %}
+output "public_ip_{{ instance_name | default('default_server') | replace('-', '_') }}" {
+  description = "Public IP để Ansible SSH vào cấu hình"
+  value       = aws_instance.ec2_{{ instance_name | default('default_server') | replace('-', '_') }}.public_ip
+}
+{% endif %}
+
+output "private_ip_{{ instance_name | default('default_server') | replace('-', '_') }}" {
+  description = "Private IP dùng để kết nối nội bộ hoặc ProxyJump"
+  value       = aws_instance.ec2_{{ instance_name | default('default_server') | replace('-', '_') }}.private_ip
 }
