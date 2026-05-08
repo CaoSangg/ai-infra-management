@@ -10,21 +10,19 @@ def dispatch_tool(tool_name: str, tool_args: dict) -> dict:
     print(f"[Dispatcher] Nhận yêu cầu chạy tool: {tool_name}")
 
     # Ansible
-    if tool_name == "run_ansible_playbook":
-        playbook_name = tool_args.get("playbook_name")
-        extra_vars = tool_args.get("extra_vars", {})
-
-        return execute_ansible_playbook(playbook_name, extra_vars)
+    if tool_name == "execute_ansible_playbook":
+        return execute_ansible_playbook(**tool_args)
 
     # Terraform
     elif tool_name == "provision_aws_infrastructure":
 
         action = tool_args.get("action", "apply")
 
-        # Render Terraform từ Jinja2
+        # 1. Bắt buộc truyền tham số 'action' để nó biết là cần Tạo file .tf (apply) hay Xóa file .tf (destroy)
         render_result = provision_aws_infrastructure(
             resource_type=tool_args.get("resource_type"),
-            config=tool_args.get("config")
+            config=tool_args.get("config"),
+            action=action
         )
 
         if render_result["status"] == "error":
@@ -37,7 +35,13 @@ def dispatch_tool(tool_name: str, tool_args: dict) -> dict:
         )
 
         wrapper = SanitizationWrapper(target_dir=environments_dir)
-        exec_result = wrapper.execute_terraform(action=action)
+        
+        # 2. Buộc phải truyền apply 
+        # Vì file .tf đã bị xóa ở bước render_result, lệnh 'apply' sẽ phát hiện sự thiếu hụt này và lên AWS thu hồi đúng cái máy đó.
+        # Tuyệt đối không truyền "destroy" xuống wrapper để tránh bay màu hệ thống!
+        tf_exec_action = "apply" 
+        
+        exec_result = wrapper.execute_terraform(action=tf_exec_action)
 
         return {
             "status": "success" if exec_result["status_code"] == 0 else "error",

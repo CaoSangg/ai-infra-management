@@ -1,0 +1,14 @@
+# Khai báo S3 Bucket
+resource "aws_s3_bucket" "bucket_{{ bucket_name | replace('-', '_') }}" {
+  bucket = "{{ bucket_name }}"
+
+  tags = {
+    Name        = "{{ bucket_name }}"
+    Environment = "{{ environment | default('dev') }}"
+    ManagedBy   = "AI-Agent"
+  }
+}
+
+output "s3_bucket_arn_{{ bucket_name | replace('-', '_') }}" {
+  value = aws_s3_bucket.bucket_{{ bucket_name | replace('-', '_') }}.arn
+}
