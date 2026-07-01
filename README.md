@@ -11,6 +11,6 @@ Dự án này là nội dung báo cáo **Đồ án chuyên ngành** thuộc ngà
 
 * **Giảng viên hướng dẫn:** ThS. Trần Thị Dung
 * **Sinh viên thực hiện:**
-    i. Lê Cao Sang — MSSV: `23521342`
-    ii. Nguyễn Tấn Quốc — MSSV: `23521306`
+  1. **Lê Cao Sang** — MSSV: `23521342`
+  2. **Nguyễn Tấn Quốc** — MSSV: `23521306`
 * **Thời gian thực hiện:** Tháng 2, Năm 2026.
